@@ -22,14 +22,6 @@ export default function CreatePost() {
     category_id: ''
   });
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
   const fetchCategories = async () => {
     const { data } = await supabase
       .from('categories')
@@ -38,6 +30,14 @@ export default function CreatePost() {
     
     setCategories(data || []);
   };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
