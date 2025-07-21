@@ -54,7 +54,22 @@ export type Database = {
           post_id?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       posts: {
         Row: {
@@ -84,25 +99,40 @@ export type Database = {
           title?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "posts_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       users: {
         Row: {
           email: string | null
           id: string
-          joinet_at: string | null
+          joined_at: string | null
           username: string
         }
         Insert: {
           email?: string | null
           id?: string
-          joinet_at?: string | null
+          joined_at?: string | null
           username: string
         }
         Update: {
           email?: string | null
           id?: string
-          joinet_at?: string | null
+          joined_at?: string | null
           username?: string
         }
         Relationships: []
@@ -129,7 +159,22 @@ export type Database = {
           user_id?: string | null
           vote_type?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "votes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
