@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import { X } from 'lucide-react';
 
 export default function Auth() {
   const { user, signIn, signUp } = useAuth();
+  const navigate = useNavigate();
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -72,9 +74,19 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md rounded-xl">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">
-            {isSignUp ? 'Join Comfetty' : 'Welcome back'}
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-2xl">
+              {isSignUp ? 'Join Confetty' : 'Welcome back'}
+            </CardTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/')}
+              className="rounded-full"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
           <CardDescription>
             {isSignUp 
               ? 'Create your account to start sharing' 

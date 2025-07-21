@@ -86,8 +86,11 @@ const Index = () => {
               {searchQuery ? 'No posts found matching your search.' : 'No posts yet.'}
             </p>
             {!searchQuery && (
-              <Button asChild className="rounded-lg">
-                <a href="/create">Create the first post!</a>
+              <Button 
+                onClick={() => window.location.href = '/create'} 
+                className="rounded-lg"
+              >
+                Create the first post!
               </Button>
             )}
           </div>

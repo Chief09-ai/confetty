@@ -24,7 +24,7 @@ export function Header({ searchQuery, onSearchChange }: HeaderProps) {
       <div className="container max-w-6xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between gap-4">
           <Link to="/" className="text-2xl font-bold text-primary">
-            Comfetty
+            Confetty
           </Link>
           
           <div className="flex-1 max-w-md">
