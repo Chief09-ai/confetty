@@ -19,9 +19,8 @@ export default function Auth() {
     username: ''
   });
 
-  if (user) {
-    return <Navigate to="/" replace />;
-  }
+  // Don't auto-redirect logged-in users, let them stay on auth page
+  // They can use the X button to go back
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

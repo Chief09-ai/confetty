@@ -36,7 +36,7 @@ export default function CreatePost() {
   }, []);
 
   if (!user) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/auth?returnTo=/create" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
