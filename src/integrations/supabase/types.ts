@@ -78,6 +78,7 @@ export type Database = {
           created_at: string | null
           id: string
           image_url: string | null
+          sub_id: string | null
           title: string
           user_id: string | null
         }
@@ -87,6 +88,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           image_url?: string | null
+          sub_id?: string | null
           title: string
           user_id?: string | null
         }
@@ -96,6 +98,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           image_url?: string | null
+          sub_id?: string | null
           title?: string
           user_id?: string | null
         }
@@ -108,6 +111,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "posts_sub_id_fkey"
+            columns: ["sub_id"]
+            isOneToOne: false
+            referencedRelation: "subs"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "posts_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -115,6 +125,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subs: {
+        Row: {
+          created_at: string
+          creator_id: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       users: {
         Row: {

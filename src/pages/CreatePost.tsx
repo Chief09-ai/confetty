@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,32 +10,65 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 export default function CreatePost() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
+  const [subs, setSubs] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     body: '',
     image_url: '',
-    category_id: ''
+    category_id: '',
+    sub_id: ''
   });
 
-  const fetchCategories = async () => {
-    const { data } = await supabase
+  useEffect(() => {
+    fetchCategoriesAndSubs();
+    
+    // Pre-select sub if coming from sub page
+    const subName = searchParams.get('sub');
+    if (subName) {
+      // Find and set the sub
+      supabase
+        .from('subs')
+        .select('id')
+        .eq('name', subName)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            setFormData(prev => ({ ...prev, sub_id: data.id }));
+          }
+        });
+    }
+  }, [searchParams]);
+
+  const fetchCategoriesAndSubs = async () => {
+    // Fetch categories
+    const { data: categoriesData } = await supabase
       .from('categories')
       .select('*')
       .order('name');
     
-    setCategories(data || []);
-  };
+    if (categoriesData) {
+      setCategories(categoriesData);
+    }
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+    // Fetch subs
+    const { data: subsData } = await supabase
+      .from('subs')
+      .select('*')
+      .order('name');
+    
+    if (subsData) {
+      setSubs(subsData);
+    }
+  };
 
   if (!user) {
     return <Navigate to="/auth?returnTo=/create" replace />;
@@ -50,30 +83,36 @@ export default function CreatePost() {
         .from('posts')
         .insert({
           title: formData.title,
-          body: formData.body,
+          body: formData.body || null,
           image_url: formData.image_url || null,
-          category_id: formData.category_id,
-          user_id: user.id,
-          created_at: new Date().toISOString()
+          category_id: formData.category_id || null,
+          sub_id: formData.sub_id || null,
+          user_id: user.id
         });
 
-      if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive"
-        });
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Post created successfully!"
+      });
+
+      // Navigate to sub page if posting to a sub, otherwise home
+      if (formData.sub_id) {
+        const selectedSub = subs.find(s => s.id === formData.sub_id);
+        if (selectedSub) {
+          navigate(`/c/${selectedSub.name}`);
+        } else {
+          navigate('/');
+        }
       } else {
-        toast({
-          title: "Success!",
-          description: "Your post has been created.",
-        });
         navigate('/');
       }
     } catch (error) {
+      console.error('Error creating post:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred.",
+        description: "Failed to create post. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -114,34 +153,50 @@ export default function CreatePost() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="category_id">Category *</Label>
-                <Select 
-                  value={formData.category_id} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
-                  required
-                >
-                  <SelectTrigger className="rounded-lg">
-                    <SelectValue placeholder="Choose a category" />
+                <Label htmlFor="sub">Sub (Community)</Label>
+                <Select value={formData.sub_id} onValueChange={(value) => setFormData({ ...formData, sub_id: value, category_id: '' })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a sub (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
+                    {subs.map((sub) => (
+                      <SelectItem key={sub.id} value={sub.id}>
+                        c/{sub.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                <p className="text-sm text-muted-foreground">
+                  Don't see your community? <Link to="/create-sub" className="text-primary hover:underline">Create a new sub</Link>
+                </p>
               </div>
+
+              {!formData.sub_id && (
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Select value={formData.category_id} onValueChange={(value) => setFormData({ ...formData, category_id: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a category (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               
               <div className="space-y-2">
-                <Label htmlFor="body">Content *</Label>
+                <Label htmlFor="body">Content</Label>
                 <Textarea
                   id="body"
                   name="body"
                   placeholder="Share your thoughts..."
                   value={formData.body}
                   onChange={handleInputChange}
-                  required
                   rows={6}
                   className="rounded-lg"
                 />
@@ -164,9 +219,16 @@ export default function CreatePost() {
                 <Button 
                   type="submit" 
                   className="flex-1 rounded-lg"
-                  disabled={loading}
+                  disabled={loading || !formData.title.trim()}
                 >
-                  {loading ? 'Creating...' : 'Create Post'}
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    'Create Post'
+                  )}
                 </Button>
                 
                 <Button 

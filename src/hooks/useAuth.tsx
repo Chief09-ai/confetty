@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           id: data.user.id,
           username,
           email,
-          joinet_at: new Date().toISOString()
+          joined_at: new Date().toISOString()
         });
       
       if (profileError) {

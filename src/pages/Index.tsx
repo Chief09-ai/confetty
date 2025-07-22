@@ -23,8 +23,9 @@ const Index = () => {
       .from('posts')
       .select(`
         *,
-        users (username),
-        categories (name)
+        users:user_id (username),
+        categories:category_id (name),
+        subs:sub_id (name)
       `)
       .order('created_at', { ascending: false });
 

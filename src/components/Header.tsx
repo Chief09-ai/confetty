@@ -49,6 +49,12 @@ export function Header({ searchQuery, onSearchChange }: HeaderProps) {
                   </Link>
                 </Button>
                 
+                <Button asChild variant="outline" size="sm" className="rounded-full">
+                  <Link to="/create-sub">
+                    Create Sub
+                  </Link>
+                </Button>
+                
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="rounded-full">

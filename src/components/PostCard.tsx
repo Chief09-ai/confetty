@@ -17,8 +17,10 @@ interface PostCardProps {
     created_at: string;
     user_id: string;
     category_id: string;
+    sub_id?: string;
     users?: { username: string };
     categories?: { name: string };
+    subs?: { name: string };
   };
   showFullContent?: boolean;
 }
@@ -126,12 +128,24 @@ export function PostCard({ post, showFullContent = false }: PostCardProps) {
             <Calendar className="h-3 w-3" />
             {formatDate(post.created_at)}
           </div>
-          {post.categories && (
+          {post.subs && (
             <>
               <span>•</span>
-              <Badge variant="secondary" className="text-xs">
-                {post.categories.name}
-              </Badge>
+              <Link to={`/c/${post.subs.name}`}>
+                <Badge variant="secondary" className="text-xs hover:bg-secondary/80 cursor-pointer">
+                  c/{post.subs.name}
+                </Badge>
+              </Link>
+            </>
+          )}
+          {post.categories && !post.subs && (
+            <>
+              <span>•</span>
+              <Link to={`/category/${post.category_id}`}>
+                <Badge variant="outline" className="text-xs hover:bg-secondary/80 cursor-pointer">
+                  {post.categories.name}
+                </Badge>
+              </Link>
             </>
           )}
         </div>
