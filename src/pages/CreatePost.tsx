@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
+import { Header } from '@/components/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,7 @@ export default function CreatePost() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     body: '',
@@ -88,6 +90,7 @@ export default function CreatePost() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
       <div className="container max-w-2xl mx-auto px-4 py-8">
         <Card className="rounded-xl">
           <CardHeader>

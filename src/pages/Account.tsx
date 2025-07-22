@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import { Header } from '@/components/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
@@ -6,6 +8,7 @@ import { Calendar, Mail, User } from 'lucide-react';
 
 export default function Account() {
   const { user, userProfile } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
 
   if (!user) {
     return <Navigate to="/auth" replace />;
@@ -17,6 +20,7 @@ export default function Account() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
       <div className="container max-w-2xl mx-auto px-4 py-8">
         <Card className="rounded-xl">
           <CardHeader>

@@ -121,19 +121,19 @@ export type Database = {
           email: string | null
           id: string
           joined_at: string | null
-          username: string
+          username: string | null
         }
         Insert: {
           email?: string | null
           id?: string
           joined_at?: string | null
-          username: string
+          username?: string | null
         }
         Update: {
           email?: string | null
           id?: string
           joined_at?: string | null
-          username?: string
+          username?: string | null
         }
         Relationships: []
       }
