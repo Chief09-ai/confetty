@@ -30,23 +30,18 @@ export default function CreatePost() {
 
   useEffect(() => {
     fetchCategoriesAndSubs();
-    
+  }, []);
+
+  useEffect(() => {
     // Pre-select sub if coming from sub page
     const subName = searchParams.get('sub');
-    if (subName) {
-      // Find and set the sub
-      supabase
-        .from('subs')
-        .select('id')
-        .eq('name', subName)
-        .single()
-        .then(({ data }) => {
-          if (data) {
-            setFormData(prev => ({ ...prev, sub_id: data.id }));
-          }
-        });
+    if (subName && subs.length > 0) {
+      const selectedSub = subs.find(s => s.name === subName);
+      if (selectedSub) {
+        setFormData(prev => ({ ...prev, sub_id: selectedSub.id }));
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, subs]);
 
   const fetchCategoriesAndSubs = async () => {
     // Fetch categories
@@ -55,9 +50,7 @@ export default function CreatePost() {
       .select('*')
       .order('name');
     
-    if (categoriesData) {
-      setCategories(categoriesData);
-    }
+    setCategories(categoriesData || []);
 
     // Fetch subs
     const { data: subsData } = await supabase
@@ -65,9 +58,7 @@ export default function CreatePost() {
       .select('*')
       .order('name');
     
-    if (subsData) {
-      setSubs(subsData);
-    }
+    setSubs(subsData || []);
   };
 
   if (!user) {

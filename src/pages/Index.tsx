@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { PostCard } from '@/components/PostCard';
+import { SearchResults } from '@/components/SearchResults';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
@@ -44,7 +45,8 @@ const Index = () => {
     return (
       post.title.toLowerCase().includes(searchLower) ||
       post.body.toLowerCase().includes(searchLower) ||
-      post.categories?.name.toLowerCase().includes(searchLower)
+      post.categories?.name.toLowerCase().includes(searchLower) ||
+      post.subs?.name.toLowerCase().includes(searchLower)
     );
   });
 
@@ -77,23 +79,21 @@ const Index = () => {
           </Select>
         </div>
 
-        {loading ? (
+        {searchQuery ? (
+          <SearchResults searchQuery={searchQuery} />
+        ) : loading ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">Loading posts...</p>
           </div>
         ) : filteredPosts.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-muted-foreground mb-4">
-              {searchQuery ? 'No posts found matching your search.' : 'No posts yet.'}
-            </p>
-            {!searchQuery && (
-              <Button 
-                onClick={() => window.location.href = '/create'} 
-                className="rounded-lg"
-              >
-                Create the first post!
-              </Button>
-            )}
+            <p className="text-muted-foreground mb-4">No posts yet.</p>
+            <Button 
+              onClick={() => window.location.href = '/create'} 
+              className="rounded-lg"
+            >
+              Create the first post!
+            </Button>
           </div>
         ) : (
           <div className="space-y-6">

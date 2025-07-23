@@ -37,9 +37,13 @@ export default function Auth() {
           });
         } else {
           toast({
-            title: "Success!",
+            title: "Signed up successfully! 🎉",
             description: "Please check your email to confirm your account.",
           });
+          // Auto-redirect to home page after successful signup
+          setTimeout(() => {
+            navigate('/');
+          }, 2000);
         }
       } else {
         const { error } = await signIn(formData.email, formData.password);
@@ -49,6 +53,9 @@ export default function Auth() {
             description: error.message,
             variant: "destructive"
           });
+        } else {
+          // Auto-redirect to home page after successful login
+          navigate('/');
         }
       }
     } catch (error) {

@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { PostCard } from '@/components/PostCard';
+import { CategoryManager } from '@/components/CategoryManager';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, Settings } from 'lucide-react';
 
 export default function SubPosts() {
   const { subName } = useParams();
@@ -15,6 +16,7 @@ export default function SubPosts() {
   const [posts, setPosts] = useState<any[]>([]);
   const [sub, setSub] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
 
   useEffect(() => {
     if (subName) {
@@ -96,15 +98,34 @@ export default function SubPosts() {
               )}
             </div>
             {user && (
-              <Link to={`/create?sub=${sub.name}`}>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Post
-                </Button>
-              </Link>
+              <div className="flex gap-2">
+                <Link to={`/create?sub=${sub.name}`}>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Post
+                  </Button>
+                </Link>
+                {user.id === sub.creator_id && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowCategoryManager(!showCategoryManager)}
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Manage
+                  </Button>
+                )}
+              </div>
             )}
           </CardHeader>
         </Card>
+
+        {showCategoryManager && user?.id === sub.creator_id && (
+          <CategoryManager 
+            subId={sub.id} 
+            subName={sub.name} 
+            isAdmin={true} 
+          />
+        )}
 
         <div className="space-y-4">
           {posts.length === 0 ? (

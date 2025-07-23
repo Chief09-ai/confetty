@@ -61,17 +61,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email,
       password,
       options: {
-        emailRedirectTo: redirectUrl
+        emailRedirectTo: redirectUrl,
+        data: {
+          username: username
+        }
       }
     });
 
     if (!error && data.user) {
-      // Create user profile
+      // Create user profile with the provided username
       const { error: profileError } = await supabase
         .from('users')
         .insert({
           id: data.user.id,
-          username,
+          username: username,
           email,
           joined_at: new Date().toISOString()
         });

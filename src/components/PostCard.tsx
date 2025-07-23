@@ -122,22 +122,22 @@ export function PostCard({ post, showFullContent = false }: PostCardProps) {
     <Card className="rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+          {post.subs && (
+            <>
+              <Link to={`/c/${post.subs.name}`}>
+                <Badge variant="secondary" className="text-xs hover:bg-secondary/80 cursor-pointer">
+                  c/{post.subs.name}
+                </Badge>
+              </Link>
+              <span>•</span>
+            </>
+          )}
           <span>u/{post.users?.username || 'Unknown'}</span>
           <span>•</span>
           <div className="flex items-center gap-1">
             <Calendar className="h-3 w-3" />
             {formatDate(post.created_at)}
           </div>
-          {post.subs && (
-            <>
-              <span>•</span>
-              <Link to={`/c/${post.subs.name}`}>
-                <Badge variant="secondary" className="text-xs hover:bg-secondary/80 cursor-pointer">
-                  c/{post.subs.name}
-                </Badge>
-              </Link>
-            </>
-          )}
           {post.categories && !post.subs && (
             <>
               <span>•</span>
