@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { PostCard } from '@/components/PostCard';
+import { CommentThread } from '@/components/CommentThread';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Calendar, User } from 'lucide-react';
 
 export default function PostDetail() {
@@ -34,7 +35,8 @@ export default function PostDetail() {
       .select(`
         *,
         users (username),
-        categories (name)
+        categories (name),
+        subs (name)
       `)
       .eq('id', id)
       .single();
@@ -59,6 +61,8 @@ export default function PostDetail() {
 
     setComments(data || []);
   };
+
+  const { toast } = useToast();
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,20 +135,20 @@ export default function PostDetail() {
   return (
     <div className="min-h-screen bg-background">
       <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-      <div className="container max-w-4xl mx-auto px-4 py-8">
-        <div className="space-y-6">
+      <div className="container max-w-4xl mx-auto px-2 md:px-4 py-4 md:py-8">
+        <div className="space-y-4 md:space-y-6">
           {/* Post */}
           <PostCard post={post} showFullContent={true} />
 
           {/* Comments Section */}
-          <Card className="rounded-xl">
-            <CardHeader>
-              <h3 className="text-lg font-semibold">
+          <Card className="rounded-lg md:rounded-xl">
+            <CardHeader className="p-3 md:p-6">
+              <h3 className="text-base md:text-lg font-semibold">
                 Comments ({comments.length})
               </h3>
             </CardHeader>
             
-            <CardContent className="space-y-6">
+            <CardContent className="p-3 md:p-6 pt-0 space-y-4 md:space-y-6">
               {/* Add Comment Form */}
               {user ? (
                 <form onSubmit={handleSubmitComment} className="space-y-3">
@@ -153,44 +157,43 @@ export default function PostDetail() {
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     rows={3}
-                    className="rounded-lg"
+                    className="rounded-lg text-sm md:text-base"
                   />
                   <Button 
                     type="submit" 
                     disabled={submitting || !newComment.trim()}
-                    className="rounded-lg"
+                    className="rounded-lg w-full md:w-auto"
+                    size="sm"
                   >
                     {submitting ? 'Posting...' : 'Post Comment'}
                   </Button>
                 </form>
               ) : (
                 <div className="text-center py-4">
-                  <p className="text-muted-foreground mb-2">
+                  <p className="text-muted-foreground mb-2 text-sm md:text-base">
                     Sign in to join the conversation
                   </p>
-                  <Button asChild variant="outline" className="rounded-lg">
+                  <Button asChild variant="outline" className="rounded-lg" size="sm">
                     <a href="/auth">Sign In</a>
                   </Button>
                 </div>
               )}
 
-              {/* Comments List */}
-              <div className="space-y-4">
-                {comments.map((comment) => (
-                  <div key={comment.id} className="border-l-2 border-muted pl-4">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                      <User className="h-3 w-3" />
-                      <span>u/{comment.users?.username || 'Unknown'}</span>
-                      <span>•</span>
-                      <Calendar className="h-3 w-3" />
-                      <span>{formatDate(comment.created_at)}</span>
-                    </div>
-                    <p className="text-foreground">{comment.body}</p>
-                  </div>
-                ))}
+              {/* Comments List - Now using CommentThread for threading and voting */}
+              <div className="space-y-2 md:space-y-4">
+                {comments
+                  .filter(comment => !comment.parent_id) // Only show top-level comments
+                  .map((comment) => (
+                    <CommentThread
+                      key={comment.id}
+                      comment={comment}
+                      postId={post.id}
+                      onCommentAdded={fetchComments}
+                    />
+                  ))}
                 
                 {comments.length === 0 && (
-                  <p className="text-center text-muted-foreground py-8">
+                  <p className="text-center text-muted-foreground py-6 md:py-8 text-sm md:text-base">
                     No comments yet. Be the first to share your thoughts!
                   </p>
                 )}
