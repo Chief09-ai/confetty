@@ -32,11 +32,44 @@ export type Database = {
         }
         Relationships: []
       }
+      comment_votes: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          user_id: string
+          vote_type: number
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+          vote_type: number
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+          vote_type?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_votes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           body: string | null
           created_at: string
           id: string
+          parent_id: string | null
           post_id: string | null
           user_id: string | null
         }
@@ -44,6 +77,7 @@ export type Database = {
           body?: string | null
           created_at: string
           id?: string
+          parent_id?: string | null
           post_id?: string | null
           user_id?: string | null
         }
@@ -51,10 +85,18 @@ export type Database = {
           body?: string | null
           created_at?: string
           id?: string
+          parent_id?: string | null
           post_id?: string | null
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "comments_post_id_fkey"
             columns: ["post_id"]
