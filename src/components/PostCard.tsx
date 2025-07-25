@@ -132,7 +132,9 @@ export function PostCard({ post, showFullContent = false }: PostCardProps) {
               <span className="hidden md:inline">•</span>
             </>
           )}
-          <span className="break-all">u/{post.users?.username || 'Unknown'}</span>
+          <Link to={`/u/${post.users?.username}`} className="hover:text-primary transition-colors">
+            <span className="break-all">u/{post.users?.username || 'Unknown'}</span>
+          </Link>
           <span className="hidden md:inline">•</span>
           <div className="flex items-center gap-1 whitespace-nowrap">
             <Calendar className="h-3 w-3" />
