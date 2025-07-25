@@ -20,21 +20,69 @@ const Index = () => {
   const fetchPosts = async () => {
     setLoading(true);
     
-    const { data, error } = await supabase
-      .from('posts')
-      .select(`
-        *,
-        users:user_id (username),
-        categories:category_id (name),
-        subs:sub_id (name)
-      `)
-      .order('created_at', { ascending: false });
+    try {
+      let query = supabase
+        .from('posts')
+        .select(`
+          *,
+          users:user_id (username),
+          categories:category_id (name),
+          subs:sub_id (name)
+        `);
 
-    if (error) {
+      if (sortBy === 'trending') {
+        // For trending: get posts with vote counts and recent activity
+        // Posts from last 7 days, sorted by vote score + recent comments
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        
+        const { data: trendingData } = await supabase
+          .from('posts')
+          .select(`
+            *,
+            users:user_id (username),
+            categories:category_id (name),
+            subs:sub_id (name)
+          `)
+          .gte('created_at', weekAgo.toISOString());
+
+        if (trendingData) {
+          // Get vote counts and recent activity for each post
+          const postsWithScores = await Promise.all(
+            trendingData.map(async (post) => {
+              const [{ data: votes }, { count: recentComments }] = await Promise.all([
+                supabase
+                  .from('votes')
+                  .select('vote_type')
+                  .eq('post_id', post.id),
+                supabase
+                  .from('comments')
+                  .select('*', { count: 'exact', head: true })
+                  .eq('post_id', post.id)
+                  .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // Last 24 hours
+              ]);
+
+              const voteScore = votes?.reduce((sum, vote) => sum + vote.vote_type, 0) || 0;
+              const trendingScore = voteScore + (recentComments || 0) * 2; // Weight recent comments more
+
+              return { ...post, trendingScore };
+            })
+          );
+
+          // Sort by trending score
+          postsWithScores.sort((a, b) => b.trendingScore - a.trendingScore);
+          setPosts(postsWithScores);
+        }
+      } else {
+        // Latest posts
+        const { data } = await query.order('created_at', { ascending: false });
+        setPosts(data || []);
+      }
+    } catch (error) {
       console.error('Error fetching posts:', error);
-    } else {
-      setPosts(data || []);
+      setPosts([]);
     }
+    
     setLoading(false);
   };
 

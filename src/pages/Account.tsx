@@ -4,7 +4,7 @@ import { Header } from '@/components/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
-import { Calendar, Mail, User } from 'lucide-react';
+import { Calendar, Mail, User, Trophy } from 'lucide-react';
 
 export default function Account() {
   const { user, userProfile } = useAuth();
@@ -73,6 +73,27 @@ export default function Account() {
                 <Badge variant="default" className="w-fit">
                   {user.email_confirmed_at ? 'Verified' : 'Pending Verification'}
                 </Badge>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Trophy className="h-4 w-4" />
+                  Confetty Score
+                </label>
+                <div className="flex items-center gap-2">
+                  <Badge 
+                    variant={userProfile?.confetty_score >= 0 ? "default" : "destructive"} 
+                    className="text-lg px-3 py-1 font-bold"
+                  >
+                    {userProfile?.confetty_score || 0}
+                  </Badge>
+                  <span className="text-sm text-muted-foreground">
+                    {userProfile?.confetty_score > 0 ? "🎉" : userProfile?.confetty_score < 0 ? "😔" : "🎯"}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Earned from upvotes on your posts and comments
+                </p>
               </div>
             </div>
           </CardContent>
