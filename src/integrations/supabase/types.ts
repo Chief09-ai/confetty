@@ -197,18 +197,21 @@ export type Database = {
       }
       users: {
         Row: {
+          confetty_score: number | null
           email: string | null
           id: string
           joined_at: string | null
           username: string | null
         }
         Insert: {
+          confetty_score?: number | null
           email?: string | null
           id?: string
           joined_at?: string | null
           username?: string | null
         }
         Update: {
+          confetty_score?: number | null
           email?: string | null
           id?: string
           joined_at?: string | null
@@ -260,7 +263,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_user_confetty_score: {
+        Args: { user_id_param: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
