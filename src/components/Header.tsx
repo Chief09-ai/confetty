@@ -4,6 +4,7 @@ import { Search, Plus, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,6 +41,8 @@ export function Header({ searchQuery, onSearchChange }: HeaderProps) {
           </div>
 
           <div className="flex items-center gap-1 md:gap-2">
+            <ThemeToggle />
+            
             {user ? (
               <>
                 <Button asChild variant="default" size="sm" className="rounded-full px-2 md:px-4">

@@ -37,6 +37,30 @@ export function PostCard({ post, showFullContent = false }: PostCardProps) {
     if (user) {
       fetchUserVote();
     }
+
+    // Set up real-time subscription for votes
+    const channel = supabase
+      .channel(`post-votes-${post.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'votes',
+          filter: `post_id=eq.${post.id}`
+        },
+        () => {
+          fetchVotes();
+          if (user) {
+            fetchUserVote();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [post.id, user]);
 
   const fetchVotes = async () => {
@@ -82,15 +106,34 @@ export function PostCard({ post, showFullContent = false }: PostCardProps) {
       return;
     }
 
+    // Store previous state for rollback
+    const prevVote = userVote;
+    const prevVotes = votes;
+
     try {
+      // Optimistic update
       if (userVote === voteType) {
+        // Remove vote
+        setUserVote(null);
+        setVotes(votes - voteType);
+      } else if (userVote) {
+        // Change vote
+        setUserVote(voteType);
+        setVotes(votes - userVote + voteType);
+      } else {
+        // Add new vote
+        setUserVote(voteType);
+        setVotes(votes + voteType);
+      }
+
+      // Perform actual database operation
+      if (prevVote === voteType) {
         // Remove vote
         await supabase
           .from('votes')
           .delete()
           .eq('post_id', post.id)
           .eq('user_id', user.id);
-        setUserVote(null);
       } else {
         // Add or update vote
         await supabase
@@ -101,11 +144,11 @@ export function PostCard({ post, showFullContent = false }: PostCardProps) {
             vote_type: voteType,
             created_at: new Date().toISOString()
           });
-        setUserVote(voteType);
       }
-      
-      fetchVotes();
     } catch (error) {
+      // Rollback on error
+      setUserVote(prevVote);
+      setVotes(prevVotes);
       toast({
         title: "Error",
         description: "Failed to vote. Please try again.",

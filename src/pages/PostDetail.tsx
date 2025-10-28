@@ -6,7 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { PostCard } from '@/components/PostCard';
+import { PostCardSkeleton } from '@/components/PostCardSkeleton';
 import { CommentThread } from '@/components/CommentThread';
+import { CommentSkeleton } from '@/components/CommentSkeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -118,8 +120,23 @@ export default function PostDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p>Loading...</p>
+      <div className="min-h-screen bg-background">
+        <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+        <div className="container max-w-4xl mx-auto px-2 md:px-4 py-4 md:py-8">
+          <div className="space-y-4 md:space-y-6">
+            <PostCardSkeleton />
+            <Card className="rounded-lg md:rounded-xl">
+              <CardHeader className="p-3 md:p-6">
+                <h3 className="text-base md:text-lg font-semibold">Comments</h3>
+              </CardHeader>
+              <CardContent className="p-3 md:p-6 pt-0 space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <CommentSkeleton key={i} />
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     );
   }

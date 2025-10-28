@@ -41,6 +41,27 @@ export function CommentThread({ comment, postId, depth = 0, onCommentAdded }: Co
   useEffect(() => {
     fetchCommentVotes();
     fetchReplies();
+
+    // Set up real-time subscription for comment votes
+    const channel = supabase
+      .channel(`comment-votes-${comment.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'comment_votes',
+          filter: `comment_id=eq.${comment.id}`
+        },
+        () => {
+          fetchCommentVotes();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [comment.id, user]);
 
   const fetchCommentVotes = async () => {
@@ -128,7 +149,27 @@ export function CommentThread({ comment, postId, depth = 0, onCommentAdded }: Co
       return;
     }
 
+    // Store previous state for rollback
+    const prevVote = userVote;
+    const prevVotes = votes;
+
     try {
+      // Optimistic update
+      if (userVote === voteType) {
+        // Remove vote
+        setUserVote(0);
+        setVotes(votes - voteType);
+      } else if (userVote !== 0) {
+        // Change vote
+        setUserVote(voteType);
+        setVotes(votes - userVote + voteType);
+      } else {
+        // Add new vote
+        setUserVote(voteType);
+        setVotes(votes + voteType);
+      }
+
+      // Perform actual database operation
       const { data: existingVote } = await supabase
         .from('comment_votes')
         .select('vote_type')
@@ -144,8 +185,6 @@ export function CommentThread({ comment, postId, depth = 0, onCommentAdded }: Co
             .delete()
             .eq('comment_id', comment.id)
             .eq('user_id', user.id);
-          setUserVote(0);
-          setVotes(votes - voteType);
         } else {
           // Update vote
           await supabase
@@ -153,8 +192,6 @@ export function CommentThread({ comment, postId, depth = 0, onCommentAdded }: Co
             .update({ vote_type: voteType })
             .eq('comment_id', comment.id)
             .eq('user_id', user.id);
-          setUserVote(voteType);
-          setVotes(votes - existingVote.vote_type + voteType);
         }
       } else {
         // Insert new vote
@@ -166,10 +203,11 @@ export function CommentThread({ comment, postId, depth = 0, onCommentAdded }: Co
             vote_type: voteType,
             created_at: new Date().toISOString()
           });
-        setUserVote(voteType);
-        setVotes(votes + voteType);
       }
     } catch (error) {
+      // Rollback on error
+      setUserVote(prevVote);
+      setVotes(prevVotes);
       console.error('Error voting on comment:', error);
       toast({
         title: "Error",

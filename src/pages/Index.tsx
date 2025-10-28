@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { PostCard } from '@/components/PostCard';
+import { PostCardSkeleton } from '@/components/PostCardSkeleton';
 import { SearchResults } from '@/components/SearchResults';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -131,8 +132,10 @@ const Index = () => {
         {searchQuery ? (
           <SearchResults searchQuery={searchQuery} />
         ) : loading ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Loading posts...</p>
+          <div className="space-y-6">
+            {[1, 2, 3].map((i) => (
+              <PostCardSkeleton key={i} />
+            ))}
           </div>
         ) : filteredPosts.length === 0 ? (
           <div className="text-center py-12">
