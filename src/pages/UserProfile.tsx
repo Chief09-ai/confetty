@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Calendar, MessageSquare, ThumbsUp } from 'lucide-react';
+import { Calendar, MessageSquare, ThumbsUp, UserPlus, UserMinus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,8 @@ import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { PostCard } from '@/components/PostCard';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 interface UserProfile {
   id: string;
@@ -17,15 +19,20 @@ interface UserProfile {
 
 export default function UserProfile() {
   const { username } = useParams<{ username: string }>();
+  const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [posts, setPosts] = useState<any[]>([]);
   const [comments, setComments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'posts' | 'comments'>('posts');
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
   const [stats, setStats] = useState({
     postsCount: 0,
     commentsCount: 0,
-    totalVotes: 0
+    totalVotes: 0,
+    followersCount: 0,
+    followingCount: 0
   });
 
   useEffect(() => {
@@ -89,7 +96,9 @@ export default function UserProfile() {
       const [
         { count: postsCount },
         { count: commentsCount },
-        { data: votesData }
+        { data: votesData },
+        { count: followersCount },
+        { count: followingCount }
       ] = await Promise.all([
         supabase
           .from('posts')
@@ -102,7 +111,15 @@ export default function UserProfile() {
         supabase
           .from('votes')
           .select('vote_type')
-          .in('post_id', postsData?.map(p => p.id) || [])
+          .in('post_id', postsData?.map(p => p.id) || []),
+        supabase
+          .from('follows')
+          .select('*', { count: 'exact', head: true })
+          .eq('following_id', profileData.id),
+        supabase
+          .from('follows')
+          .select('*', { count: 'exact', head: true })
+          .eq('follower_id', profileData.id)
       ]);
 
       const totalVotes = votesData?.reduce((sum, vote) => sum + vote.vote_type, 0) || 0;
@@ -110,13 +127,71 @@ export default function UserProfile() {
       setStats({
         postsCount: postsCount || 0,
         commentsCount: commentsCount || 0,
-        totalVotes
+        totalVotes,
+        followersCount: followersCount || 0,
+        followingCount: followingCount || 0
       });
+
+      // Check if current user is following this profile
+      if (user && user.id !== profileData.id) {
+        const { data: followData } = await supabase
+          .from('follows')
+          .select('id')
+          .eq('follower_id', user.id)
+          .eq('following_id', profileData.id)
+          .maybeSingle();
+
+        setIsFollowing(!!followData);
+      }
 
     } catch (error) {
       console.error('Error fetching user profile:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFollowToggle = async () => {
+    if (!user) {
+      toast.error('You must be logged in to follow users');
+      return;
+    }
+
+    if (!profile) return;
+
+    setFollowLoading(true);
+    try {
+      if (isFollowing) {
+        const { error } = await supabase
+          .from('follows')
+          .delete()
+          .eq('follower_id', user.id)
+          .eq('following_id', profile.id);
+
+        if (error) throw error;
+
+        setIsFollowing(false);
+        setStats(prev => ({ ...prev, followersCount: prev.followersCount - 1 }));
+        toast.success('Unfollowed user');
+      } else {
+        const { error } = await supabase
+          .from('follows')
+          .insert({
+            follower_id: user.id,
+            following_id: profile.id
+          });
+
+        if (error) throw error;
+
+        setIsFollowing(true);
+        setStats(prev => ({ ...prev, followersCount: prev.followersCount + 1 }));
+        toast.success('Following user');
+      }
+    } catch (error) {
+      console.error('Error toggling follow:', error);
+      toast.error('Failed to update follow status');
+    } finally {
+      setFollowLoading(false);
     }
   };
 
@@ -165,7 +240,7 @@ export default function UserProfile() {
         {/* Profile Header */}
         <Card className="mb-6">
           <CardHeader>
-            <div className="flex flex-col md:flex-row md:items-center gap-4">
+            <div className="flex flex-col md:flex-row md:items-start gap-4">
               <div className="w-16 h-16 md:w-20 md:h-20 bg-primary rounded-full flex items-center justify-center">
                 <span className="text-2xl md:text-3xl font-bold text-primary-foreground">
                   {profile.username.charAt(0).toUpperCase()}
@@ -178,10 +253,30 @@ export default function UserProfile() {
                   <span className="text-sm">Joined {formatDate(profile.joined_at)}</span>
                 </div>
               </div>
+              {user && user.id !== profile.id && (
+                <Button
+                  onClick={handleFollowToggle}
+                  disabled={followLoading}
+                  variant={isFollowing ? 'outline' : 'default'}
+                  className="gap-2"
+                >
+                  {isFollowing ? (
+                    <>
+                      <UserMinus className="h-4 w-4" />
+                      Unfollow
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="h-4 w-4" />
+                      Follow
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="grid grid-cols-5 gap-4 text-center">
               <div>
                 <div className="text-lg md:text-xl font-bold">{stats.postsCount}</div>
                 <div className="text-xs md:text-sm text-muted-foreground">Posts</div>
@@ -193,6 +288,14 @@ export default function UserProfile() {
               <div>
                 <div className="text-lg md:text-xl font-bold">{stats.totalVotes}</div>
                 <div className="text-xs md:text-sm text-muted-foreground">Votes Received</div>
+              </div>
+              <div>
+                <div className="text-lg md:text-xl font-bold">{stats.followersCount}</div>
+                <div className="text-xs md:text-sm text-muted-foreground">Followers</div>
+              </div>
+              <div>
+                <div className="text-lg md:text-xl font-bold">{stats.followingCount}</div>
+                <div className="text-xs md:text-sm text-muted-foreground">Following</div>
               </div>
             </div>
           </CardContent>

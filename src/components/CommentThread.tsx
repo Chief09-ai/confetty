@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { MessageSquare, ChevronUp, ChevronDown, Reply } from "lucide-react";
+import { ReportDialog } from './ReportDialog';
 
 interface Comment {
   id: string;
@@ -328,6 +329,7 @@ export function CommentThread({ comment, postId, depth = 0, onCommentAdded }: Co
                 <Reply className="h-3 w-3 mr-1" />
                 Reply
               </Button>
+              <ReportDialog commentId={comment.id} />
               {replies.length > 0 && (
                 <span className="text-xs text-muted-foreground">
                   <MessageSquare className="h-3 w-3 inline mr-1" />

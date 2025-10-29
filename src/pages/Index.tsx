@@ -7,9 +7,11 @@ import { SearchResults } from '@/components/SearchResults';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
-import { TrendingUp, Clock } from 'lucide-react';
+import { TrendingUp, Clock, Users } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const Index = () => {
+  const { user } = useAuth();
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -75,6 +77,22 @@ const Index = () => {
           postsWithScores.sort((a, b) => b.trendingScore - a.trendingScore);
           setPosts(postsWithScores);
         }
+      } else if (sortBy === 'following' && user) {
+        // Following feed - posts from users the current user follows
+        const { data: followingData } = await supabase
+          .from('follows')
+          .select('following_id')
+          .eq('follower_id', user.id);
+
+        if (followingData && followingData.length > 0) {
+          const followingIds = followingData.map(f => f.following_id);
+          const { data } = await query
+            .in('user_id', followingIds)
+            .order('created_at', { ascending: false });
+          setPosts(data || []);
+        } else {
+          setPosts([]);
+        }
       } else {
         // Latest posts
         const { data } = await query.order('created_at', { ascending: false });
@@ -125,6 +143,14 @@ const Index = () => {
                   Trending
                 </div>
               </SelectItem>
+              {user && (
+                <SelectItem value="following">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Following
+                  </div>
+                </SelectItem>
+              )}
             </SelectContent>
           </Select>
         </div>

@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { ReportDialog } from './ReportDialog';
 
 interface PostCardProps {
   post: {
@@ -248,6 +249,8 @@ export function PostCard({ post, showFullContent = false }: PostCardProps) {
               <span className="md:hidden">{commentsCount}</span>
             </Button>
           </Link>
+          
+          <ReportDialog postId={post.id} />
         </div>
       </CardContent>
     </Card>
